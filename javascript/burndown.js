@@ -1,6 +1,8 @@
 $(document).ready(function() {
   // TODO
   // - add form validations
+  // - make largest debts sit on bottom of y-axis - order datasets DESC
+  // - can i make make small debts hit the next smallest debt on the Y-axis when completed instead of Y-axis 0?
   var debtTemplate = $('.debt-info').clone();
 
   $('#debt-form').on('click', '.add-debt', function(e) {
@@ -55,7 +57,6 @@ $(document).ready(function() {
 
   function getDebts(form) {
     formData = $(form).serializeArray()
-    // console.log(_.object(formData.map(function(v) {return [v.name, v.value];} )))
     // return _.object(formData.map(function(v) {return [v.name, v.value];} ))
 
     debts = []
@@ -72,40 +73,41 @@ $(document).ready(function() {
   }
 
   function buildChartData(debts) {
-    monthlyPaymentTotal = _.inject(debts, function(sum, debt) { return sum + debt.monthlyPayment })
-    remainingDebts = _.reject(debts, function(debt) { return debt.amount == 0});
-    remainingDebts = _.sortBy(remainingDebts, function(debt){ return debt.amount })
-    totalDebt      = _.inject(debts, function(sum, debt) { return sum + debt.amount })
-
-    datasets = {}
-    _.each(debts, function(debt) {
-      datasets[debt.name] = { monthlyBalances: [] }
-    });
+    // monthlyPaymentTotal = _.inject(debts, function(sum, debt) { return sum + debt.monthlyPayment })
+    debts      = _.sortBy(debts, function(debt) { return debt.amount });
+    debtTotals = _.map(debts, function(debt) { return debt.amount});
+    totalDebt  = _.inject(debtTotals, function(sum, amount) { return sum + amount });
 
     date     = moment()
     labels   = []
     leftover = 0
+    datasets = {}
+    _.each(debts, function(debt) { return datasets[debt.name] = { monthlyBalances: [] } });
 
-    while (totalDebt != 0) {
-      remainingDebts = _.reject(remainingDebts, function(debt) { return debt.amount == 0});
-      remainingDebts = _.sortBy(remainingDebts, function(debt) { return debt.amount })
 
-      _.each(remainingDebts, function(debt){
+    while (totalDebt > 0) {
+      debts = _.sortBy(debts, function(debt) { return debt.amount })
+
+      _.each(debts, function(debt){
         // use leftover money
         // TODO leftover doesn't seem to be being paid towards next-highest loan
-        leftoverPayment = Math.min(debt.amount, leftover)
-        debt.amount     = debt.amount - leftoverPayment
-        leftover        = leftover - leftoverPayment
+        if (debt.amount > 0) {
+          leftoverPayment = Math.min(debt.amount, leftover)
+          debt.amount    -= leftoverPayment
+          leftover       -= leftoverPayment
 
-        // make monthly payment
-        payment = Math.min(debt.amount, debt.monthlyPayment)
-        debt.amount = debt.amount - payment
-        leftover = leftover + (debt.monthlyPayment - payment)
-        datasets[debt.name].monthlyBalances.push(debt.amount)
+          // make monthly payment
+          payment      = Math.min(debt.amount, debt.monthlyPayment)
+          debt.amount -= payment
+          leftover    += debt.monthlyPayment - payment
+          datasets[debt.name].monthlyBalances.push(debt.amount)
+        } else {
+          leftover += debt.monthlyPayment
+        }
       });
 
-      debtTotals = _.map(remainingDebts, function(debt) { return debt.amount})
-      totalDebt = _.inject(debtTotals, function(sum, debt) { return sum + debt.amount })
+      debtTotals = _.map(debts, function(debt) { return debt.amount})
+      totalDebt = _.inject(debtTotals, function(sum, amount) { return sum + amount })
       labels.push(date.format('MMMM / YYYY'))
       date.add(1, 'months')
     }
