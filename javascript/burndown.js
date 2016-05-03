@@ -1,8 +1,8 @@
 $(document).ready(function() {
   // TODO
   // - add form validations
-  // - make largest debts sit on bottom of y-axis - order datasets DESC
-  // - can i make make small debts hit the next smallest debt on the Y-axis when completed instead of Y-axis 0?
+  // - add a "total debt" data set: that is what will show snowball effect
+
   var debtTemplate = $('.debt-info').clone();
 
   $('#debt-form').on('click', '.add-debt', function(e) {
@@ -23,9 +23,10 @@ $(document).ready(function() {
 
   $('#debt-form').on('submit', function(e){
     e.preventDefault();
-    debts         = getDebts(this)
+    debts = getDebts(this)
     if (debts != []) {
-      chartData     = buildChartData(debts)
+      $("#burndown-chart").empty()
+      chartData = buildChartData(debts)
       buildBurndownChart(chartData);
     }
   });
@@ -57,7 +58,6 @@ $(document).ready(function() {
 
   function getDebts(form) {
     formData = $(form).serializeArray()
-    // return _.object(formData.map(function(v) {return [v.name, v.value];} ))
 
     debts = []
     _.each($('.debt-info'), function(el) {
@@ -82,15 +82,13 @@ $(document).ready(function() {
     labels   = []
     leftover = 0
     datasets = {}
-    _.each(debts, function(debt) { return datasets[debt.name] = { monthlyBalances: [] } });
-
+    _.each(debts, function(debt) { return datasets[debt.name] = { monthlyBalances: [parseInt(debt.amount)] } });
 
     while (totalDebt > 0) {
       debts = _.sortBy(debts, function(debt) { return debt.amount })
 
       _.each(debts, function(debt){
         // use leftover money
-        // TODO leftover doesn't seem to be being paid towards next-highest loan
         if (debt.amount > 0) {
           leftoverPayment = Math.min(debt.amount, leftover)
           debt.amount    -= leftoverPayment
@@ -108,7 +106,7 @@ $(document).ready(function() {
 
       debtTotals = _.map(debts, function(debt) { return debt.amount})
       totalDebt = _.inject(debtTotals, function(sum, amount) { return sum + amount })
-      labels.push(date.format('MMMM / YYYY'))
+      labels.push(date.format('MMMM YYYY'))
       date.add(1, 'months')
     }
 
@@ -116,52 +114,36 @@ $(document).ready(function() {
   }
 
   function buildChartDatasets(debts) {
-    datasets = _.map(debts, function(data, name) {
+    var debtNames = _.keys(debts)
+    var datasets = _.map(debts, function(debt, name) {
+      var hsl = getDatasetHsl(debtNames, debtNames.indexOf(name))
       return {
         label: name,
         fill: true,
         stacked: true,
         lineTension: 0.1,
-        backgroundColor: "rgba(255,99,132,0.2)",
-        borderColor: "rgba(255,99,132,1)",
+        backgroundColor: "hsla("+hsl+",0.2)",
+        borderColor: "hsla("+hsl+",1)",
         borderCapStyle: 'butt',
         borderDash: [],
         borderDashOffset: 0.0,
         borderJoinStyle: 'miter',
-        pointBorderColor: "rgba(255,99,132,0.4)",
+        pointBorderColor: "hsla("+hsl+",0.4)",
         pointBackgroundColor: "#fff",
         pointHoverRadius: 5,
-        pointHoverBackgroundColor: "rgba(255,99,132,0.4)",
-        pointHoverBorderColor: "rgba(255,99,132,1)",
+        pointHoverBackgroundColor: "hsla("+hsl+",0.4)",
+        pointHoverBorderColor: "hsla("+hsl+",0.1)",
         pointHoverBorderWidth: 2,
         pointRadius: 1,
         pointHitRadius: 10,
-        data: data.monthlyBalances,
+        data: debt.monthlyBalances,
       }
     });
 
-    // need to generate colors too
-    // {
-    //   label: debt.name,
-    //   fill: true,
-    //   stacked: true,
-    //   lineTension: 0.1,
-    //   backgroundColor: "rgba(255,99,132,0.2)",
-    //   borderColor: "rgba(255,99,132,1)",
-    //   borderCapStyle: 'butt',
-    //   borderDash: [],
-    //   borderDashOffset: 0.0,
-    //   borderJoinStyle: 'miter',
-    //   pointBorderColor: "rgba(255,99,132,0.4)",
-    //   pointBackgroundColor: "#fff",
-    //   pointHoverRadius: 5,
-    //   pointHoverBackgroundColor: "rgba(255,99,132,0.4)",
-    //   pointHoverBorderColor: "rgba(255,99,132,1)",
-    //   pointHoverBorderWidth: 2,
-    //   pointRadius: 1,
-    //   pointHitRadius: 10,
-    //   data: debt.history,
-    // }
     return datasets
+  }
+
+  function getDatasetHsl(arr, index) {
+    return  (360 * index / arr.length) + ', 100%, 50%';
   }
 });
