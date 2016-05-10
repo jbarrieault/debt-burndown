@@ -7,15 +7,27 @@ body {
 }
 
 .title {
-  font-size: 3em;
-  text-transform: uppercase;
-  letter-spacing: 5px;
-  margin: 40px auto;
+  font-size: 4em;
+  font-weight: 100;
+  letter-spacing: 3px;
+  margin: 40px auto 10px;
+}
+
+.subtitle {
+  color: #5b5b5b;
+  font-size: 1.1em;
+  margin-bottom: 30px;
 }
 
 .form-container {
   width: 100%;
   margin: auto;
+  padding: 10px;
+}
+
+.instructions {
+  font-size: 20px;
+  font-weight: 300;
 }
 
 .form-inline {
@@ -26,17 +38,37 @@ form {
   margin-top: 20px;
 }
 
+.add-debt, .remove-debt {
+  width: 100%;
+}
+
+.debt-info {
+  margin-bottom: 35px;
+}
+
+.burndown-details {
+  display: none;
+  margin: 30px auto;
+}
+
 .chart-container {
-  max-width: 700px;
+  max-width: 800px;
   margin: 30px auto auto;
+  display: none;
 }
 
 @media (min-width: 768px) {
   .form-container {
     width: 600px;
+    padding: 0;
   }
 
-  .chart-container {
+  .add-debt, .remove-debt {
+    width: 35px;
+  }
+
+  .debt-info {
+    margin-bottom: 8px;
   }
 
 }

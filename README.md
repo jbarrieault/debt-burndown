@@ -1,0 +1,2 @@
+# Debt Burndown
+This is a simple tool I made to help me see how soon I will be debt-free. The chart shows the repayment course assuming the use of the "snowball" strategy, wherein when a debt is paid off, the money that was being made as payment for the debt is then allocated to the next smallest debt until all debts have been repaid.

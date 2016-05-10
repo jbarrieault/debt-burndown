@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <title>Debt Burndown</title>
   <meta name="author" content="Jacob Barrieault">
-  <meta name="description" content="Visualize your journey to a debt-free life.">
+  <meta name="description" content="Your journey to a debt-free life.">
   <meta name="keywords" content="debt,burndown,personal finance">
   <meta name="viewport" content="width=device-width" />
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css">
   <link rel="stylesheet" href="stylesheets/style.css" type="text/css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
   <script type="text/javascript">
    var _gaq = _gaq || [];
    _gaq.push(['_setAccount', 'UA-XXXXXXXX-Y']);
@@ -24,40 +25,46 @@
   <body>
     <div class="">
       <div class="main-content">
-
-        <div class="">
-          <div class="">
+        <div>
+          <div>
             <h1 class="title text-center">Debt Burndown</h1>
+            <p class="subtitle text-center">Your path to becoming debt-free</p>
           </div>
 
-          <div class="">
-            <div class="form-container">
-              <h3>Your debts</h3>
-              <form id="debt-form">
-                <div class="form-inline debt-info">
-                  <div class="form-group">
-                    <label class="sr-only" for="name">Name</label>
-                    <input type="text" class="form-control" name="name" placeholder="Name">
-                  </div>
-                  <div class="form-group">
-                    <label class="sr-only" for="amount">Password</label>
-                    <input type="text" class="form-control" name="amount" placeholder="Amount">
-                  </div>
-                  <div class="form-group">
-                    <label class="sr-only" for="monthlyPayment">Monthly Payment</label>
-                    <input type="text" class="form-control" name="monthlyPayment" placeholder="Monthly Payment">
-                  </div>
-                  <div class="form-group">
-                    <button class="btn btn-default add-debt">+</button>
-                  </div>
+          <div class="form-container">
+            <h3 class="instructions">Enter your debts</h3>
+            <form id="debt-form">
+              <div class="form-inline debt-info">
+                <div class="form-group">
+                  <label class="sr-only" for="name">Name</label>
+                  <input type="text" class="form-control" name="name" placeholder="Name">
                 </div>
-                <button type="submit" class="btn btn-success">Submit</button>
-              </form>
-            </div>
+                <div class="form-group">
+                  <label class="sr-only" for="amount">Password</label>
+                  <input type="text" class="form-control" name="amount" placeholder="Amount">
+                </div>
+                <div class="form-group">
+                  <label class="sr-only" for="monthlyPayment">Monthly Payment</label>
+                  <input type="text" class="form-control" name="monthlyPayment" placeholder="Monthly Payment">
+                </div>
+                <div class="form-group">
+                  <button class="btn btn-default add-debt">+</button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-success">Submit</button>
+            </form>
           </div>
 
           <div class="chart-container">
-            <canvas id="burndown-chart" width="200" height="100"></canvas>
+            <div class="burndown-details">
+              <h3>Repayment Details:</h3>
+              <p class="payoff-date"></p>
+              <p class="leftover-details"></p>
+              <p class="monthly-payment-details"></p>
+              <a class="toggle-details" href="#">update debt details</a>
+            </div>
+            <canvas id="burndown-chart" width="400" height="300"></canvas>
           </div>
 
         </div>

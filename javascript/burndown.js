@@ -1,7 +1,5 @@
 $(document).ready(function() {
-  // TODO
-  // - add form validations
-  // - add a "total debt" data set: that is what will show snowball effect
+  // - add form validation?
 
   var debtTemplate = $('.debt-info').clone();
 
@@ -25,34 +23,64 @@ $(document).ready(function() {
     e.preventDefault();
     debts = getDebts(this)
     if (debts != []) {
-      $("#burndown-chart").empty()
       chartData = buildChartData(debts)
       buildBurndownChart(chartData);
+      $('.form-container').hide();
+      $('.chart-container').show();
     }
+  });
+
+  $('.toggle-details').on('click', function(e){
+    e.preventDefault()
+    $('.form-container').show()
+    $('.chart-container').hide();
   });
 
   function buildBurndownChart(data) {
     var ctx = $("#burndown-chart");
-    var burndownChart = new Chart(ctx, {
-      type: 'line',
-      data: data,
-      options: burndownChartOptions(),
-    });
+    $('.chart-container').show()
+    if (window.burndownChart != undefined) {
+      window.burndownChart.destroy()
+    }
+    window.burndownChart = new Chart(ctx, chartConfig(data));
+    updateBurndownDetails(data)
+  }
+
+  function updateBurndownDetails(data) {
+    $('.burndown-details').show()
+    $('.payoff-date').html("You will be debt-free in <strong>" + data.labels[data.labels.length - 1] + "</strong>")
+    $('.leftover-details').html("On your final month of repayment you will have <strong>$" + data.leftover + "</strong> leftover")
+    $('.monthly-payment-details').html("You are paying a total of <strong>$" + data.monthlyPaymentTotal + "</strong> towards your debts each month.")
   }
 
   function burndownChartOptions() {
     return {
+      responsive: true,
+      title:{
+        display:true,
+        text:"Chart.js Line Chart - Stacked Area"
+      },
+      tooltips: {
+        mode: 'label',
+      },
+      hover: {
+        mode: 'label'
+      },
       scales: {
+        xAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Month'
+          }
+        }],
         yAxes: [{
           stacked: true,
           scaleLabel: {
-            show: true,
-            labelString: '$'
-          },
-        }],
-        xAxes: [{
-        }],
-      },
+            display: true,
+            labelString: 'Value'
+          }
+        }]
+      }
     }
   }
 
@@ -61,9 +89,9 @@ $(document).ready(function() {
 
     debts = []
     _.each($('.debt-info'), function(el) {
-      name = $(el).find('[name="name"').val()
-      amount = $(el).find('[name="amount"').val()
-      monthlyPayment = $(el).find('[name="monthlyPayment"').val()
+      name = $(el).find('[name="name"]').val()
+      amount = $(el).find('[name="amount"]').val()
+      monthlyPayment = $(el).find('[name="monthlyPayment"]').val()
       if (name != '' && amount != '' && monthlyPayment != '') {
         debts.push({name: name, amount: amount, monthlyPayment: monthlyPayment})
       }
@@ -73,9 +101,9 @@ $(document).ready(function() {
   }
 
   function buildChartData(debts) {
-    // monthlyPaymentTotal = _.inject(debts, function(sum, debt) { return sum + debt.monthlyPayment })
-    debts      = _.sortBy(debts, function(debt) { return debt.amount });
-    debtTotals = _.map(debts, function(debt) { return debt.amount});
+    monthlyPaymentTotal = _.inject(debts, function(sum, debt) { return sum + parseInt(debt.monthlyPayment) }, 0)
+    debts      = _.sortBy(debts, function(debt) { return parseInt(debt.amount) });
+    debtTotals = _.map(debts, function(debt) { return parseInt(debt.amount)});
     totalDebt  = _.inject(debtTotals, function(sum, amount) { return sum + amount });
 
     date     = moment()
@@ -95,12 +123,12 @@ $(document).ready(function() {
           leftover       -= leftoverPayment
 
           // make monthly payment
-          payment      = Math.min(debt.amount, debt.monthlyPayment)
+          payment      = Math.min(debt.amount, parseInt(debt.monthlyPayment))
           debt.amount -= payment
           leftover    += debt.monthlyPayment - payment
           datasets[debt.name].monthlyBalances.push(debt.amount)
         } else {
-          leftover += debt.monthlyPayment
+          leftover += parseInt(debt.monthlyPayment)
         }
       });
 
@@ -109,8 +137,9 @@ $(document).ready(function() {
       labels.push(date.format('MMMM YYYY'))
       date.add(1, 'months')
     }
+    labels.push(date.format('MMMM YYYY'))
 
-    return {labels: labels, datasets: buildChartDatasets(datasets) }
+    return {labels: labels, datasets: buildChartDatasets(datasets), leftover: leftover, monthlyPaymentTotal: monthlyPaymentTotal }
   }
 
   function buildChartDatasets(debts) {
@@ -119,15 +148,13 @@ $(document).ready(function() {
       var hsl = getDatasetHsl(debtNames, debtNames.indexOf(name))
       return {
         label: name,
+        data: debt.monthlyBalances,
         fill: true,
-        stacked: true,
         lineTension: 0.1,
-        backgroundColor: "hsla("+hsl+",0.2)",
+        backgroundColor: "hsla("+hsl+",1)",
         borderColor: "hsla("+hsl+",1)",
-        borderCapStyle: 'butt',
         borderDash: [],
         borderDashOffset: 0.0,
-        borderJoinStyle: 'miter',
         pointBorderColor: "hsla("+hsl+",0.4)",
         pointBackgroundColor: "#fff",
         pointHoverRadius: 5,
@@ -136,14 +163,49 @@ $(document).ready(function() {
         pointHoverBorderWidth: 2,
         pointRadius: 1,
         pointHitRadius: 10,
-        data: debt.monthlyBalances,
       }
     });
-
+    datasets = _.sortBy(datasets, function(dataset) { return dataset.data[0] }).reverse()
     return datasets
   }
 
   function getDatasetHsl(arr, index) {
     return  (360 * index / arr.length) + ', 100%, 50%';
   }
+
+  function chartConfig(data) {
+    return {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        title:{
+          display:true,
+          text:"Debt Burndown Schedule"
+        },
+        tooltips: {
+          mode: 'label',
+        },
+        hover: {
+          mode: 'label'
+        },
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Month'
+            }
+          }],
+          yAxes: [{
+            stacked: true,
+            scaleLabel: {
+              display: true,
+              labelString: '$'
+            }
+          }]
+        }
+      }
+    };
+  }
+
 });
